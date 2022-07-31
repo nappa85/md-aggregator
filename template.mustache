@@ -1,0 +1,78 @@
+<html>
+    <head>
+        <title>MarkDown Aggregator</title>
+        <style>
+            #menu {
+                display: box;
+                width: 300px;
+                float: left;
+            }
+            #menu ul {
+                list-style: none;
+            }
+            #menu li.dir > ul {
+                display: none;
+            }
+            #menu li.dir.open > ul {
+                display: inherit;
+            }
+            #content {
+                padding-left: 300px;
+            }
+        </style>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
+        <script>
+            var converter;
+            function open(url, owner) {
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: JSON.stringify({ owner: owner }),
+                    success: function(data) { $("#content").html(converter.makeHtml(atob(data))); },
+                    contentType: "application/json",
+                    dataType: "text"
+                });
+            }
+            $(function() {
+                converter = new showdown.Converter();
+                $("li a").click(function(event) {
+                    event.preventDefault();
+                    if($(this).parent().hasClass("dir")) {
+                        $(this).parent().toggleClass("open");
+                    }
+                    else {
+                        var url = $(this).attr("href");
+                        open(url, $(this).parent().attr("owner"))
+                        window.history.pushState({}, '', url);
+                    }
+                });
+                $("#menu li.dir").each(function() {
+                    var url = $(this).children("a").attr('href');
+                    if(window.location.pathname.indexOf(url) === 0) {
+                        $(this).addClass("open");
+                    }
+                    var newParent = $("<UL>").appendTo($(this));
+                    var next = $(this).next();
+                    while(next && next.children("a").attr('href') && next.children("a").attr('href').indexOf(url) === 0) {
+                        if(window.location.pathname == next.children("a").attr('href')) {
+                            open(window.location.pathname, next.attr("owner"));
+                        }
+                        $(this).next().appendTo(newParent);
+                        next = $(this).next();
+                    }
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div id="menu">
+            <ul>
+            {{#tree}}
+                <li owner="{{entry.config_entry}}"{{#is_dir}} class="dir"{{/is_dir}}><a href="/{{path}}">{{display}}</a></li>
+            {{/tree}}
+            </ul>
+        </div>
+        <div id="content"></div>
+    </body>
+</html>
