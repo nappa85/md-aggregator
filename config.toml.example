@@ -1,0 +1,14 @@
+# edit this file and save it as config.toml
+
+[My GitHub Repo]
+flavour = "github"
+token = "my_token"
+owner = "my_username"
+repo = "my_repo"
+branch = "my_branch"
+
+[My GitLab Repo]
+flavour = "gitlab"
+token = "<optionally_my_token>"
+id = my_project_id
+branch = "<optionally_my_branch>"

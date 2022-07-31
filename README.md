@@ -24,11 +24,13 @@ branch = "<optionally_my_branch>"
 
 ### GitHub
 
-To be aggregated, you must provide an OAuth access token with full `repo` scope. Probably a public repo would need only `repo:public_repo` scope, haven't tested yet.
+On a public repos, a token with `repo:public_repo` scope is necessary.<br />
+For private repos, a token with full `repo` scope is necessary.
 
 ### GitLab
 
-On a public project, no token is required. For private projects, a token with `read_api` scope is necessary. Probably also `read_repository` scope would be enough, haven't tested yet.
+On a public repos, no token is required.<br />
+For private repos, a token with `read_api` scope is necessary.
 
 ## Working features
 
