@@ -38,7 +38,8 @@ impl CacheEntry {
         if self.tree.is_dir {
             leaf.into()
         } else {
-            format!("{} ({})", leaf, self.config_entry).into()
+            // remove .md extension
+            format!("{} ({})", &leaf[0..(leaf.len() - 3)], self.config_entry).into()
         }
     }
 }
@@ -120,6 +121,7 @@ fn finalize(cache: Cache) -> Result<(), ()> {
                 display: entry.display(),
             })
         })
+        .filter(|entry| entry.path.ends_with(".md") || entry.is_dir)
         .collect::<Vec<_>>();
     temp.sort_unstable_by_key(|entry| entry.path);
     data.insert("tree", temp);
@@ -135,7 +137,7 @@ pub fn get() -> Guard<Arc<String>> {
     CACHE.load()
 }
 
-pub async fn retrieve(path: &str, owner: &str) -> Option<String> {
+pub async fn retrieve(path: &str, owner: &str) -> Option<Vec<u8>> {
     let lock = TREE.load();
     for entry in lock.get(path)? {
         if entry.config_entry == owner {

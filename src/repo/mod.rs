@@ -40,7 +40,7 @@ impl Repo {
         }
     }
 
-    pub async fn retrieve(&self, sha: &str) -> Option<String> {
+    pub async fn retrieve(&self, sha: &str) -> Option<Vec<u8>> {
         match self {
             Repo::Github(r) => r.retrieve(sha).await,
             Repo::Gitlab(r) => r.retrieve(sha).await,

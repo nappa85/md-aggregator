@@ -7,7 +7,9 @@ edition = "2021"
 
 [dependencies]
 arc-swap = "1.5.0"
+base64 = "0.13.0"
 hyper = { version = "0.14.20", features = ["http1", "server", "tcp"] }
+mime_guess = "2.0.4"
 mustache = "0.9.0"
 once_cell = "1.13.0"
 reqwest = { version = "0.11.11", features = ["json"] }

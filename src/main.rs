@@ -1,12 +1,9 @@
-use std::{borrow::Cow, convert::Infallible, net::SocketAddr};
+use std::{convert::Infallible, net::SocketAddr};
 
 use hyper::{
-    body::{aggregate, Buf},
     service::{make_service_fn, service_fn},
     Body, Method, Request, Response, Server,
 };
-
-use serde::Deserialize;
 
 use tracing::error;
 
@@ -14,38 +11,30 @@ mod cache;
 mod config;
 mod repo;
 
-#[derive(Deserialize)]
-struct Owner<'a> {
-    owner: Cow<'a, str>,
-}
-
-async fn retrieve(req: Request<Body>) -> Option<String> {
-    let (head, body) = req.into_parts();
-    let url = head.uri.path();
-    let buf = aggregate(body)
-        .await
-        .map_err(|e| error!("Request body aggregate error: {}", e))
-        .ok()?;
-    let owner: Owner = serde_json::from_reader(buf.reader())
-        .map_err(|e| error!("Request body deserialize error: {}", e))
-        .ok()?;
-    cache::retrieve(&url[1..], &owner.owner).await
-}
-
 async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     match req.method() {
         &Method::GET => {
-            let cache = cache::get();
-            Ok(Response::new(Body::from(cache.to_string())))
-        }
-        &Method::POST => {
-            let res = Response::builder().header("Content-Type", "text/plain");
-            match retrieve(req).await {
-                Some(s) => Ok(res.body(Body::from(s)).unwrap()),
-                None => Ok(res.status(404).body(Body::empty()).unwrap()),
+            if let Some(owner) = req.uri().query().and_then(|query| {
+                query
+                    .split('&')
+                    .find(|s| s.starts_with("owner="))
+                    .map(|s| &s[6..])
+            }) {
+                // send single file, if available
+                let url = req.uri().path();
+                let mime = mime_guess::from_path(url).first_or_text_plain();
+                let res = Response::builder().header("Content-Type", mime.as_ref());
+                match cache::retrieve(&url[1..], owner).await {
+                    Some(s) => Ok(res.body(Body::from(s)).unwrap()),
+                    None => Ok(res.status(404).body(Body::empty()).unwrap()),
+                }
+            } else {
+                // send entire template
+                let cache = cache::get();
+                Ok(Response::new(Body::from(cache.to_string())))
             }
         }
-        _ => Ok(Response::new(Body::empty())),
+        _ => Ok(Response::builder().status(404).body(Body::empty()).unwrap()),
     }
 }
 

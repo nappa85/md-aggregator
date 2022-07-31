@@ -26,10 +26,25 @@
             var converter;
             function open(url, owner) {
                 $.ajax({
-                    type: "POST",
+                    type: "GET",
                     url: url,
-                    data: JSON.stringify({ owner: owner }),
-                    success: function(data) { $("#content").html(converter.makeHtml(atob(data))); },
+                    data: { owner: owner },
+                    success: function(data) {
+                        var content = $(converter.makeHtml(data));
+                        content.find('a').each(function() {
+                            var href = $(this).attr("href");
+                            if(href && href.indexOf("http") !== 0) {
+                                $(this).attr("href", href + ((href.indexOf('?') < 0)?'?':'&') + "owner=" + owner);
+                            }
+                        });
+                        content.find('img').each(function() {
+                            var href = $(this).attr("src");
+                            if(href && href.indexOf("http") !== 0) {
+                                $(this).attr("src", href + ((href.indexOf('?') < 0)?'?':'&') + "owner=" + owner);
+                            }
+                        });
+                        $("#content").html(content);
+                    },
                     contentType: "application/json",
                     dataType: "text"
                 });
@@ -48,19 +63,24 @@
                     }
                 });
                 $("#menu li.dir").each(function() {
-                    var url = $(this).children("a").attr('href');
-                    if(window.location.pathname.indexOf(url) === 0) {
-                        $(this).addClass("open");
-                    }
-                    var newParent = $("<UL>").appendTo($(this));
                     var next = $(this).next();
-                    while(next && next.children("a").attr('href') && next.children("a").attr('href').indexOf(url) === 0) {
-                        if(window.location.pathname == next.children("a").attr('href')) {
-                            open(window.location.pathname, next.attr("owner"));
+                    if(next && next.length > 0) {
+                        var url = $(this).children("a").attr('href');
+                        if(window.location.pathname.indexOf(url) === 0) {
+                            $(this).addClass("open");
                         }
-                        $(this).next().appendTo(newParent);
-                        next = $(this).next();
+                        var newParent = $("<UL>").appendTo($(this));
+                        while(next && next.children("a").attr('href') && next.children("a").attr('href').indexOf(url) === 0) {
+                            $(this).next().appendTo(newParent);
+                            next = $(this).next();
+                        }
                     }
+                    else {
+                        $(this).hide();
+                    }
+                });
+                $("#menu li a[href='" + window.location.pathname + "']").each(function() {
+                    open(window.location.pathname, $(this).parent().attr("owner"));
                 });
             });
         </script>

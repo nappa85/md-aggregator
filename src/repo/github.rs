@@ -23,7 +23,7 @@ impl Repo {
         Ok(tree.tree.into_iter().map(Into::into).collect())
     }
 
-    pub async fn retrieve(&self, sha: &str) -> Option<String> {
+    pub async fn retrieve(&self, sha: &str) -> Option<Vec<u8>> {
         let res: Blob = self
             .call(format!(
                 "https://api.github.com/repos/{}/{}/git/blobs/{}",
@@ -31,7 +31,9 @@ impl Repo {
             ))
             .await
             .ok()?;
-        return Some(res.content);
+        base64::decode(res.content)
+            .map_err(|e| error!("GitHub base64 decode error: {}", e))
+            .ok()
     }
 
     async fn call<U: IntoUrl, T: DeserializeOwned>(&self, url: U) -> Result<T, ()> {
