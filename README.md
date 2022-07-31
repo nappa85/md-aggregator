@@ -41,5 +41,6 @@ On a public project, no token is required. For private projects, a token with `r
 
 * support github API pagination
 * support gitlab API pagination
+* filter/manage not markdown files
 * default template styling
 * file cache (?)
