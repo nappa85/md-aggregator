@@ -18,7 +18,7 @@ branch = "my_branch"
 [My GitLab Repo]
 flavour = "gitlab"
 token = "<optionally_my_token>"
-iid = "my_project_id"
+id = my_project_id
 branch = "<optionally_my_branch>"
 ```
 
