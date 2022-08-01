@@ -1,4 +1,4 @@
-use std::{convert::Infallible, net::SocketAddr};
+use std::{convert::Infallible, env, net::SocketAddr};
 
 use hyper::{
     service::{make_service_fn, service_fn},
@@ -50,7 +50,11 @@ async fn main() {
     cache::init().await.unwrap();
 
     // Construct our SocketAddr to listen on...
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
+    let port = env::var("PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(80);
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
     // And a MakeService to handle each connection...
     let make_service = make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(handle)) });
