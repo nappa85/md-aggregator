@@ -44,7 +44,7 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     // Parse config and abort on error
-    config::Config::init().await.unwrap();
+    config::init();
 
     // Init cache and abort on error
     cache::init().await.unwrap();

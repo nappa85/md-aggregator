@@ -66,7 +66,7 @@ pub async fn init() -> Result<(), ()> {
 }
 
 async fn renew() -> Result<(), ()> {
-    let config = config::Config::get();
+    let config = config::get();
     let lock = TREE.load();
     let mut cache = HashMap::clone(lock.as_ref());
     for (key, repo) in config {
@@ -77,7 +77,7 @@ async fn renew() -> Result<(), ()> {
 }
 
 async fn renew_ignoring_errors() {
-    let config = config::Config::get();
+    let config = config::get();
     let lock = TREE.load();
     let mut cache = HashMap::clone(lock.as_ref());
     for (key, repo) in config {
@@ -141,7 +141,7 @@ pub async fn retrieve(path: &str, owner: &str) -> Option<Vec<u8>> {
     let lock = TREE.load();
     for entry in lock.get(path)? {
         if entry.config_entry == owner {
-            let repo = config::Config::retrieve(owner)?;
+            let repo = config::retrieve(owner)?;
             return repo.retrieve(&entry.tree.sha).await;
         }
     }
