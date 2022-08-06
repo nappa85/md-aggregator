@@ -40,8 +40,8 @@ For private repos, a token with `read_api` scope is necessary.
 * interface templating
 * async file retrieve
 * file temporary cache
+* default template styling
 
 ## Missing features
 
 * support github API pagination (?)
-* default template styling

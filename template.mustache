@@ -1,14 +1,35 @@
-<html>
+<html lang="en">
     <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=6">
         <title>MarkDown Aggregator</title>
         <style>
+            html, body {
+                padding: 0;
+                margin: 0;
+            }
+            body {
+                height: 100vh;
+                width: 100vw;
+                background-color: gainsboro;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            h1, h2, h3, h4, h5, h6, h7 {
+                font-family: Sans-serif;
+            }
             #menu {
-                display: box;
                 width: 300px;
+                height: 100%;
+                overflow: scroll;
                 float: left;
+                background-color: grey;
+                padding: 0 10px;
             }
             #menu ul {
                 list-style: none;
+                padding-left: 10px;
             }
             #menu li.dir > ul {
                 display: none;
@@ -16,8 +37,14 @@
             #menu li.dir.open > ul {
                 display: inherit;
             }
+            #menu a, #menu a:link, #menu a:visited, #menu a:hover, #menu a:active {
+                color: white;
+                text-decoration: none;
+            }
             #content {
-                padding-left: 300px;
+                padding-left: 10px;
+                height: 100%;
+                overflow: scroll;
             }
         </style>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -87,6 +114,7 @@
     </head>
     <body>
         <div id="menu">
+            <h1>MD-Aggregator</h1>
             <ul>
             {{#tree}}
                 <li owner="{{entry.config_entry}}"{{#is_dir}} class="dir"{{/is_dir}}><a href="/{{path}}">{{display}}</a></li>
