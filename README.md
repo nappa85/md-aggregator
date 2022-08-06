@@ -39,9 +39,9 @@ For private repos, a token with `read_api` scope is necessary.
 * support for gitlab pagination
 * interface templating
 * async file retrieve
+* file temporary cache
 
 ## Missing features
 
 * support github API pagination (?)
 * default template styling
-* file cache (?)

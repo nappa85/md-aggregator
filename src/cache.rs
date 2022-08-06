@@ -1,4 +1,9 @@
-use std::{borrow::Cow, collections::HashMap, sync::Arc, time::Duration};
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    sync::Arc,
+    time::{Duration, SystemTime},
+};
 
 use arc_swap::{ArcSwap, Guard};
 
@@ -14,6 +19,9 @@ use crate::{config, repo::TreeEntry};
 
 type Cache = HashMap<String, Vec<CacheEntry>>;
 
+// Article cache in seconds
+const CACHE_LIFETIME: u64 = 3600;
+
 // Cache of Tree data
 static TREE: Lazy<ArcSwap<Cache>> = Lazy::new(Default::default);
 
@@ -24,7 +32,16 @@ static TEMPLATE: Lazy<mustache::Template> = Lazy::new(|| {
 });
 
 // Final template render cache
-static CACHE: Lazy<ArcSwap<String>> = Lazy::new(Default::default);
+static TEMPLATE_CACHE: Lazy<ArcSwap<String>> = Lazy::new(Default::default);
+
+// Articles contents cache
+static ARTICLE_CACHE: Lazy<ArcSwap<rpds::HashTrieMapSync<String, ArticleCache>>> =
+    Lazy::new(Default::default);
+
+struct ArticleCache {
+    article: Vec<u8>,
+    timestamp: u64,
+}
 
 #[derive(Clone, Serialize)]
 struct CacheEntry {
@@ -128,13 +145,13 @@ fn finalize(cache: Cache) -> Result<(), ()> {
     let template = TEMPLATE
         .render_to_string(&data)
         .map_err(|e| error!("Mustache render error: {}", e))?;
-    CACHE.store(template.into());
+    TEMPLATE_CACHE.store(template.into());
     TREE.store(cache.into());
     Ok(())
 }
 
 pub fn get() -> Guard<Arc<String>> {
-    CACHE.load()
+    TEMPLATE_CACHE.load()
 }
 
 pub async fn retrieve(path: &str, owner: &str) -> Option<Vec<u8>> {
@@ -142,7 +159,48 @@ pub async fn retrieve(path: &str, owner: &str) -> Option<Vec<u8>> {
     for entry in lock.get(path)? {
         if entry.config_entry == owner {
             let repo = config::retrieve(owner)?;
-            return repo.retrieve(&entry.tree.sha).await;
+            let cache = ARTICLE_CACHE.load();
+            let mut cache = Cow::Borrowed(cache.as_ref());
+
+            // get article from cache before possibly deleting it
+            let mut article = cache.get(&entry.tree.sha).map(|ac| ac.article.clone());
+
+            // cleanup outdated articles
+            let now = SystemTime::UNIX_EPOCH.elapsed().unwrap().as_secs();
+            let to_be_removed = cache
+                .iter()
+                .filter_map(|(k, v)| (v.timestamp + CACHE_LIFETIME < now).then(|| k.clone()))
+                .collect::<Vec<_>>();
+            if !to_be_removed.is_empty() {
+                let mut new_cache = cache.into_owned();
+                for key in to_be_removed {
+                    new_cache.remove_mut(&key);
+                }
+                cache = Cow::Owned(new_cache);
+            }
+
+            // retrieve article if necessary
+            if article.is_none() {
+                article = repo.retrieve(&entry.tree.sha).await;
+                if let Some(article) = &article {
+                    let mut new_cache = cache.into_owned();
+                    new_cache.insert_mut(
+                        entry.tree.sha.clone(),
+                        ArticleCache {
+                            article: article.clone(),
+                            timestamp: now,
+                        },
+                    );
+                    cache = Cow::Owned(new_cache);
+                }
+            }
+
+            // store new cache version if necessary
+            if let Cow::Owned(cache) = cache {
+                ARTICLE_CACHE.store(cache.into());
+            }
+
+            return article;
         }
     }
     None

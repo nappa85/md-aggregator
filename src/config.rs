@@ -9,7 +9,7 @@ static CONFIG: Lazy<HashMap<String, Repo>> = Lazy::new(|| {
     toml::from_str(contents).unwrap()
 });
 
-pub  fn init() {
+pub fn init() {
     Lazy::force(&CONFIG);
 }
 
