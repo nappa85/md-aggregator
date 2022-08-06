@@ -31,6 +31,9 @@
                 list-style: none;
                 padding-left: 10px;
             }
+            #menu li.active {
+                background-color: darkolivegreen;
+            }
             #menu li.dir > ul {
                 display: none;
             }
@@ -84,6 +87,8 @@
                         $(this).parent().toggleClass("open");
                     }
                     else {
+                        $("li.active).toggleClass("active");
+                        $(this).parent().toggleClass("active");
                         var url = $(this).attr("href");
                         open(url, $(this).parent().attr("owner"))
                         window.history.pushState({}, '', url);
@@ -107,6 +112,7 @@
                     }
                 });
                 $("#menu li a[href='" + window.location.pathname + "']").each(function() {
+                    $(this).parent().toggleClass("active");
                     open(window.location.pathname, $(this).parent().attr("owner"));
                 });
             });
