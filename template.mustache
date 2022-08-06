@@ -22,14 +22,20 @@
             #menu {
                 width: 300px;
                 height: 100%;
-                overflow: scroll;
+                overflow: hidden;
                 float: left;
                 background-color: grey;
                 padding: 0 10px;
             }
+            #menu h1 {
+                position: abolute;
+            }
             #menu ul {
                 list-style: none;
                 padding-left: 10px;
+                overflow: scroll;
+                height: 100%;
+                margin-top: 85px;
             }
             #menu li.active {
                 background-color: darkolivegreen;
