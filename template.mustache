@@ -116,7 +116,7 @@
                         self.parentNode.classList.toggle('open');
                     }
                     else {
-                        document.querySelector('li.active').classList.toggle('active');
+                        document.querySelectorAll('li.active').forEach((self) => self.classList.toggle('active'));
                         self.parentNode.classList.toggle('active');
                         const url = self.href;
                         open(url, self.parentNode.dataset.owner)
