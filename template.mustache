@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -72,78 +73,80 @@
                 margin: 0;
                 padding: 10px;
             }
-            body.collapsed #menu ul {
+            .hidden, body.collapsed #menu ul {
                 display: none;
             }
         </style>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
         <script>
-            var converter;
-            function open(url, owner) {
-                $.ajax({
-                    type: "GET",
-                    url: url,
-                    data: { owner: owner },
-                    success: function(data) {
-                        var content = $(converter.makeHtml(data));
-                        content.find('a').each(function() {
-                            var href = $(this).attr("href");
-                            if(href && href.indexOf("http") !== 0) {
-                                $(this).attr("href", href + ((href.indexOf('?') < 0)?'?':'&') + "owner=" + owner);
-                            }
-                        });
-                        content.find('img').each(function() {
-                            var href = $(this).attr("src");
-                            if(href && href.indexOf("http") !== 0) {
-                                $(this).attr("src", href + ((href.indexOf('?') < 0)?'?':'&') + "owner=" + owner);
-                            }
-                        });
-                        $("#content").html(content);
-                        $("body").toggleClass("collapsed");
-                    },
-                    contentType: "application/json",
-                    dataType: "text"
-                });
+            let converter = null;
+            function appendOwner(url, owner) {
+                return url + (url.indexOf('?') < 0?'?':'&') + 'owner=' + owner;
             }
-            $(function() {
+            function open(url, owner) {
+                fetch(appendOwner(url, owner))
+                    .then((response) => response.text())
+                    .then((data) => {
+                        const content = converter.makeHtml(data);
+                        document.querySelector('#content').innerHTML = content;
+                        document.querySelectorAll('#content a').forEach((self) => {
+                            const href = self.href;
+                            if(href && href.indexOf('http') !== 0) {
+                                self.setAttribute('href', appendOwner(href, owner));
+                            }
+                        });
+                        document.querySelectorAll('#content img').forEach((self) => {
+                            const href = self.src;
+                            if(href && href.indexOf('http') !== 0) {
+                                self.setAttribute('src', appendOwner(href, owner));
+                            }
+                        });
+                        document.querySelector('body').classList.toggle('collapsed');
+                    });
+            }
+            window.addEventListener('load', function() {
                 converter = new showdown.Converter();
-                $("#menu h1").click(function(event) {
-                    $("body").toggleClass("collapsed");
-                });
-                $("#menu li a").click(function(event) {
+                document.querySelectorAll('#menu h1').forEach((element) => element.addEventListener('click', function() {
+                    document.querySelector('body').classList.toggle('collapsed');
+                }));
+                document.querySelectorAll('#menu li a').forEach((element) => element.addEventListener('click', function(event) {
+                    const self = event.target;
                     event.preventDefault();
-                    if($(this).parent().hasClass("dir")) {
-                        $(this).parent().toggleClass("open");
+                    if(self.parentNode.classList.contains('dir')) {
+                        self.parentNode.classList.toggle('open');
                     }
                     else {
-                        $("li.active").toggleClass("active");
-                        $(this).parent().toggleClass("active");
-                        var url = $(this).attr("href");
-                        open(url, $(this).parent().attr("owner"))
+                        document.querySelector('li.active').classList.toggle('active');
+                        self.parentNode.classList.toggle('active');
+                        const url = self.href;
+                        open(url, self.parentNode.dataset.owner)
                         window.history.pushState({}, '', url);
                     }
-                });
-                $("#menu li.dir").each(function() {
-                    var next = $(this).next();
-                    if(next && next.length > 0) {
-                        var url = $(this).children("a").attr('href');
+                }));
+                document.querySelectorAll('#menu li.dir').forEach((self) => {
+                    let next = self.nextElementSibling;
+                    if(next) {
+                        const url = self.querySelector('a').href;
                         if(window.location.pathname.indexOf(url) === 0) {
-                            $(this).addClass("open");
+                            self.classList.add('open');
                         }
-                        var newParent = $("<UL>").appendTo($(this));
-                        while(next && next.children("a").attr('href') && next.children("a").attr('href').indexOf(url) === 0) {
-                            $(this).next().appendTo(newParent);
-                            next = $(this).next();
+                        const newParent = document.createElement('ul')
+                        self.appendChild(newParent);
+                        while(next && next.querySelector('a').href && next.querySelector('a').href.indexOf(url) === 0) {
+                            newParent.appendChild(self.nextElementSibling);
+                            next = self.nextElementSibling;
+                        }
+                        if(newParent.querySelectorAll('a').length == 0) {
+                            self.classList.add('hidden');
                         }
                     }
                     else {
-                        $(this).hide();
+                        self.classList.add('hidden');
                     }
                 });
-                $("#menu li a[href='" + window.location.pathname + "']").each(function() {
-                    $(this).parent().toggleClass("active");
-                    open(window.location.pathname, $(this).parent().attr("owner"));
+                document.querySelectorAll('#menu li a[href=\'' + window.location.pathname + '\']').forEach((self) => {
+                    self.parentNode.classList.toggle('active');
+                    open(window.location.pathname, self.parentNode.dataset.owner);
                 });
             });
         </script>
@@ -153,7 +156,7 @@
             <h1>MD-Aggregator</h1>
             <ul>
             {{#tree}}
-                <li owner="{{entry.config_entry}}"{{#is_dir}} class="dir"{{/is_dir}}><a href="/{{path}}">{{display}}</a></li>
+                <li data-owner="{{entry.config_entry}}"{{#is_dir}} class="dir"{{/is_dir}}><a href="/{{path}}">{{display}}</a></li>
             {{/tree}}
             </ul>
         </div>
