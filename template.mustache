@@ -12,6 +12,7 @@
                 height: 100vh;
                 width: 100vw;
                 background-color: gainsboro;
+                display: flex;
             }
             * {
                 box-sizing: border-box;
@@ -20,32 +21,28 @@
                 font-family: Sans-serif;
             }
             #menu {
-                width: 300px;
                 height: 100%;
                 overflow: hidden;
-                float: left;
-                background-color: grey;
-                padding: 0 10px;
+                background-color: #090C9B;
+                padding: 0;
+                border-right: 1px #D00000 solid;
             }
             #menu h1 {
-                position: absolute;
-                color: darkolivegreen;
-                text-shadow: 0 0 10px black;
+                color: #D00000;
                 cursor: pointer;
+                padding: 0 10px;
             }
             #menu ul {
                 list-style: none;
-                padding-left: 10px;
+                padding: 0 0 0 10px;
                 margin: 0;
             }
             #menu > ul {
                 overflow: scroll;
                 height: calc(100% - 95px);
-                margin-top: 85px;
-                margin-bottom: 10px;
             }
             #menu li.active {
-                background-color: darkolivegreen;
+                background-color: #D00000;
             }
             #menu li.dir > ul {
                 display: none;
@@ -54,8 +51,11 @@
                 display: inherit;
             }
             #menu a, #menu a:link, #menu a:visited, #menu a:hover, #menu a:active {
-                color: white;
+                color: gainsboro;
                 text-decoration: none;
+            }
+            #menu li.active a {
+                color: #090C9B;
             }
             #content {
                 padding-left: 10px;
@@ -66,7 +66,10 @@
                 width: 55px;
             }
             body.collapsed #menu h1 {
-                transform: translateX(-45%) translateY(200%) rotate(-90deg);
+                writing-mode: sideways-rl;
+                text-orientation: sideways-right;
+                margin: 0;
+                padding: 10px;
             }
             body.collapsed #menu ul {
                 display: none;
