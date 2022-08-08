@@ -91,14 +91,12 @@
                         document.querySelector('#content').innerHTML = content;
                         document.querySelectorAll('#content a').forEach((self) => {
                             const href = self.href;
-                            console.log(href);
                             if(href && (href.indexOf('http') !== 0 || href.indexOf(window.location.origin) === 0)) {
                                 self.setAttribute('href', appendOwner(href, owner));
                             }
                         });
                         document.querySelectorAll('#content img').forEach((self) => {
                             const href = self.src;
-                            console.log(href);
                             if(href && (href.indexOf('http') !== 0 || href.indexOf(window.location.origin) === 0)) {
                                 self.setAttribute('src', appendOwner(href, owner));
                             }
