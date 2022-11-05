@@ -58,7 +58,7 @@ body.collapsed #menu {
     min-width: 65px;
 }
 body.collapsed #menu h1 {
-    writing-mode: sideways-rl;
+    writing-mode: vertical-rl;
     text-orientation: sideways-right;
     margin: 0;
     padding: 10px;
