@@ -11,11 +11,7 @@ mod gitlab;
 
 // Unique http client
 static CLIENT: Lazy<Client> = Lazy::new(|| {
-    Client::builder()
-        .connect_timeout(Duration::from_secs(60))
-        .timeout(Duration::from_secs(60))
-        .build()
-        .unwrap()
+    Client::builder().connect_timeout(Duration::from_secs(60)).timeout(Duration::from_secs(60)).build().unwrap()
 });
 
 #[derive(Deserialize)]

@@ -22,6 +22,9 @@ type Cache = HashMap<String, Vec<CacheEntry>>;
 // Article cache in seconds
 const CACHE_LIFETIME: u64 = 3600;
 
+pub static STYLE: &str = include_str!("../style.css");
+pub static MARKDOWN: &str = include_str!("../markdown.css");
+
 // Cache of Tree data
 static TREE: Lazy<ArcSwap<Cache>> = Lazy::new(Default::default);
 
@@ -35,8 +38,7 @@ static TEMPLATE: Lazy<mustache::Template> = Lazy::new(|| {
 static TEMPLATE_CACHE: Lazy<ArcSwap<String>> = Lazy::new(Default::default);
 
 // Articles contents cache
-static ARTICLE_CACHE: Lazy<ArcSwap<rpds::HashTrieMapSync<String, ArticleCache>>> =
-    Lazy::new(Default::default);
+static ARTICLE_CACHE: Lazy<ArcSwap<rpds::HashTrieMapSync<String, ArticleCache>>> = Lazy::new(Default::default);
 
 struct ArticleCache {
     article: Vec<u8>,
@@ -106,15 +108,10 @@ async fn renew_ignoring_errors() {
 }
 
 fn insert(cache: &mut Cache, key: &'static str, tree: Vec<TreeEntry>) {
-    cache
-        .iter_mut()
-        .for_each(|(_, entries)| entries.retain(|entry| entry.config_entry != key));
+    cache.iter_mut().for_each(|(_, entries)| entries.retain(|entry| entry.config_entry != key));
     for t in tree {
         let entry = cache.entry(t.path.clone()).or_insert_with(Vec::new);
-        entry.push(CacheEntry {
-            config_entry: key,
-            tree: t,
-        });
+        entry.push(CacheEntry { config_entry: key, tree: t });
     }
 }
 
@@ -131,20 +128,13 @@ fn finalize(cache: Cache) -> Result<(), ()> {
     let mut temp = cache
         .iter()
         .flat_map(|(path, tree)| {
-            tree.iter().map(|entry| RenderEntry {
-                path,
-                is_dir: entry.tree.is_dir,
-                entry,
-                display: entry.display(),
-            })
+            tree.iter().map(|entry| RenderEntry { path, is_dir: entry.tree.is_dir, entry, display: entry.display() })
         })
         .filter(|entry| entry.path.ends_with(".md") || entry.is_dir)
         .collect::<Vec<_>>();
     temp.sort_unstable_by_key(|entry| entry.path);
     data.insert("tree", temp);
-    let template = TEMPLATE
-        .render_to_string(&data)
-        .map_err(|e| error!("Mustache render error: {}", e))?;
+    let template = TEMPLATE.render_to_string(&data).map_err(|e| error!("Mustache render error: {}", e))?;
     TEMPLATE_CACHE.store(template.into());
     TREE.store(cache.into());
     Ok(())
@@ -184,13 +174,8 @@ pub async fn retrieve(path: &str, owner: &str) -> Option<Vec<u8>> {
                 article = repo.retrieve(&entry.tree.sha).await;
                 if let Some(article) = &article {
                     let mut new_cache = cache.into_owned();
-                    new_cache.insert_mut(
-                        entry.tree.sha.clone(),
-                        ArticleCache {
-                            article: article.clone(),
-                            timestamp: now,
-                        },
-                    );
+                    new_cache
+                        .insert_mut(entry.tree.sha.clone(), ArticleCache { article: article.clone(), timestamp: now });
                     cache = Cow::Owned(new_cache);
                 }
             }

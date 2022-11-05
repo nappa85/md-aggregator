@@ -25,15 +25,12 @@ impl Repo {
 
     pub async fn retrieve(&self, sha: &str) -> Option<Vec<u8>> {
         let res: Blob = self
-            .call(format!(
-                "https://api.github.com/repos/{}/{}/git/blobs/{}",
-                self.owner, self.repo, sha
-            ))
+            .call(format!("https://api.github.com/repos/{}/{}/git/blobs/{}", self.owner, self.repo, sha))
             .await
             .ok()?;
-        base64::decode(res.content)
-            .map_err(|e| error!("GitHub base64 decode error: {}", e))
-            .ok()
+        // we need to remove problematic chars
+        let contents = res.content.split_whitespace().collect::<Vec<_>>().join("");
+        base64::decode(contents).map_err(|e| error!("GitHub base64 decode error: {e}\n{res:?}")).ok()
     }
 
     async fn call<U: IntoUrl, T: DeserializeOwned>(&self, url: U) -> Result<T, ()> {
@@ -73,17 +70,13 @@ pub struct TreeEntry {
     pub url: String,
 }
 
-impl Into<super::TreeEntry> for TreeEntry {
-    fn into(self) -> super::TreeEntry {
-        super::TreeEntry {
-            is_dir: self._type == EntryType::Tree,
-            path: self.path,
-            sha: self.sha,
-        }
+impl From<TreeEntry> for super::TreeEntry {
+    fn from(te: TreeEntry) -> Self {
+        super::TreeEntry { is_dir: te._type == EntryType::Tree, path: te.path, sha: te.sha }
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum EntryType {
     Blob,

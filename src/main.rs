@@ -5,7 +5,7 @@ use hyper::{
     Body, Method, Request, Response, Server,
 };
 
-use tracing::error;
+use tracing::{error, info};
 
 mod cache;
 mod config;
@@ -14,24 +14,33 @@ mod repo;
 async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     match req.method() {
         &Method::GET => {
-            if let Some(owner) = req.uri().query().and_then(|query| {
+            if let Some((Ok(owner), Ok(url))) = req.uri().query().and_then(|query| {
                 query
                     .split('&')
                     .find(|s| s.starts_with("owner="))
-                    .map(|s| &s[6..])
+                    .map(|s| (urlencoding::decode(&s[6..]), urlencoding::decode(req.uri().path())))
             }) {
                 // send single file, if available
-                let url = req.uri().path();
-                let mime = mime_guess::from_path(url).first_or_text_plain();
+                let mime = mime_guess::from_path(url.as_ref()).first_or_text_plain();
                 let res = Response::builder().header("Content-Type", mime.as_ref());
-                match cache::retrieve(&url[1..], owner).await {
+                match cache::retrieve(&url[1..], &owner).await {
                     Some(s) => Ok(res.body(Body::from(s)).unwrap()),
-                    None => Ok(res.status(404).body(Body::empty()).unwrap()),
+                    None => {
+                        info!("Path {url} not found");
+                        Ok(res.status(404).body(Body::empty()).unwrap())
+                    }
                 }
             } else {
-                // send entire template
-                let cache = cache::get();
-                Ok(Response::new(Body::from(cache.to_string())))
+                // serve static files
+                match req.uri().path() {
+                    "/style.css" => Ok(Response::new(Body::from(cache::STYLE))),
+                    "/markdown.css" => Ok(Response::new(Body::from(cache::MARKDOWN))),
+                    _ => {
+                        // send entire template
+                        let cache = cache::get();
+                        Ok(Response::new(Body::from(cache.to_string())))
+                    },
+                }
             }
         }
         _ => Ok(Response::builder().status(404).body(Body::empty()).unwrap()),
@@ -50,10 +59,7 @@ async fn main() {
     cache::init().await.unwrap();
 
     // Construct our SocketAddr to listen on...
-    let port = env::var("PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(80);
+    let port = env::var("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8080);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
     // And a MakeService to handle each connection...
@@ -62,8 +68,10 @@ async fn main() {
     // Then bind and serve...
     let server = Server::bind(&addr).serve(make_service);
 
+    info!("Listening on {addr}");
+
     // And run forever...
     if let Err(e) = server.await {
-        error!("server error: {}", e);
+        error!("server error: {e}");
     }
 }
