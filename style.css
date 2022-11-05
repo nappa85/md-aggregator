@@ -5,22 +5,24 @@ html, body {
 body {
     height: 100vh;
     width: 100vw;
-    background-color: gainsboro;
+    background-color: #1a1d21;
     display: flex;
+    color: #d1d2d3;
 }
 h1, h2, h3, h4, h5, h6, h7 {
     font-family: Sans-serif;
+    color: #ffffff;
 }
 #menu {
     height: 100%;
     overflow: hidden;
-    background-color: #090C9B;
+    background-color: #19171d;
     padding: 0;
-    border-right: 1px #D00000 solid;
+    border-right: 1px #2b2a2f solid;
     min-width: 250px;
 }
 #menu h1 {
-    color: #D00000;
+    color: #ffffff;
     cursor: pointer;
     padding: 0 10px;
 }
@@ -34,7 +36,7 @@ h1, h2, h3, h4, h5, h6, h7 {
     height: calc(100% - 95px);
 }
 #menu li.active {
-    background-color: #D00000;
+    background-color: #2b2a2f;
 }
 #menu li.dir > ul {
     display: none;
@@ -47,7 +49,7 @@ h1, h2, h3, h4, h5, h6, h7 {
     text-decoration: none;
 }
 #menu li.active a {
-    color: #090C9B;
+    color: #ffffff;
 }
 #content {
     padding-left: 10px;
