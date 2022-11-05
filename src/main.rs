@@ -15,10 +15,12 @@ async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     match req.method() {
         &Method::GET => {
             if let Some((Ok(owner), Ok(url))) = req.uri().query().and_then(|query| {
-                query
-                    .split('&')
-                    .find(|s| s.starts_with("owner="))
-                    .map(|s| (urlencoding::decode(&s[6..]), urlencoding::decode(req.uri().path())))
+                query.split('&').find(|s| s.starts_with("owner=")).map(|s| {
+                    (
+                        urlencoding::decode(&s[6..]),
+                        urlencoding::decode(req.uri().path()),
+                    )
+                })
             }) {
                 // send single file, if available
                 let mime = mime_guess::from_path(url.as_ref()).first_or_text_plain();
@@ -33,14 +35,23 @@ async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
             } else {
                 // serve static files
                 match req.uri().path() {
-                    "/style.css" => Ok(Response::new(Body::from(cache::STYLE))),
-                    "/markdown.css" => Ok(Response::new(Body::from(cache::MARKDOWN))),
-                    "/script.js" => Ok(Response::new(Body::from(cache::SCRIPT))),
+                    "/style.css" => Ok(Response::builder()
+                        .header("Content-Type", "text/css")
+                        .body(Body::from(cache::STYLE))
+                        .unwrap()),
+                    "/markdown.css" => Ok(Response::builder()
+                        .header("Content-Type", "text/css")
+                        .body(Body::from(cache::MARKDOWN))
+                        .unwrap()),
+                    "/script.js" => Ok(Response::builder()
+                        .header("Content-Type", "text/javascript")
+                        .body(Body::from(cache::SCRIPT))
+                        .unwrap()),
                     _ => {
                         // send entire template
                         let cache = cache::get();
                         Ok(Response::new(Body::from(cache.to_string())))
-                    },
+                    }
                 }
             }
         }
@@ -60,7 +71,10 @@ async fn main() {
     cache::init().await.unwrap();
 
     // Construct our SocketAddr to listen on...
-    let port = env::var("PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(8080);
+    let port = env::var("PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(8080);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
     // And a MakeService to handle each connection...

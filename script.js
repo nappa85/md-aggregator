@@ -50,7 +50,7 @@ window.addEventListener('load', function() {
         let next = self.nextElementSibling;
         if(next) {
             const url = self.querySelector('a').href;
-            if(pathname.indexOf(url) === 0) {
+            if(window.location.href.indexOf(url) === 0) {
                 self.classList.add('open');
             }
             const newParent = document.createElement('ul')
@@ -67,8 +67,14 @@ window.addEventListener('load', function() {
             self.classList.add('hidden');
         }
     });
-    document.querySelectorAll('#menu li a[href=\'' + pathname + '\']').forEach((self) => {
-        self.parentNode.classList.toggle('active');
-        open(pathname, self.parentNode.dataset.owner);
-    });
+    const opened = document.querySelectorAll('#menu li a[href=\'' + pathname + '\']');
+    if(opened.length > 0) {
+        opened.forEach((self) => {
+            self.parentNode.classList.toggle('active');
+            open(pathname, self.parentNode.dataset.owner);
+        });
+    }
+    else {
+        document.querySelector('body').classList.toggle('collapsed');
+    }
 });

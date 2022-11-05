@@ -24,9 +24,16 @@ impl Repo {
     }
 
     pub async fn retrieve(&self, sha: &str) -> Option<Vec<u8>> {
-        let res: Blob =
-            self.call(format!("https://gitlab.com/api/v4/projects/{}/repository/blobs/{}", self.id, sha)).await.ok()?;
-        base64::decode(res.content.trim()).map_err(|e| error!("GitLab base64 decode error: {e}\n{res:?}")).ok()
+        let res: Blob = self
+            .call(format!(
+                "https://gitlab.com/api/v4/projects/{}/repository/blobs/{}",
+                self.id, sha
+            ))
+            .await
+            .ok()?;
+        base64::decode(res.content.trim())
+            .map_err(|e| error!("GitLab base64 decode error: {e}\n{res:?}"))
+            .ok()
     }
 
     async fn call<U: IntoUrl, T: DeserializeOwned>(&self, url: U) -> Result<T, ()> {
@@ -47,7 +54,9 @@ impl Repo {
         U: IntoUrl,
         T: DeserializeOwned,
     {
-        let mut url = url.into_url().map_err(|e| error!("Invalid GitLab URL: {}", e))?;
+        let mut url = url
+            .into_url()
+            .map_err(|e| error!("Invalid GitLab URL: {}", e))?;
         let mut acc = vec![];
 
         loop {
@@ -55,13 +64,21 @@ impl Repo {
             if let Some(token) = self.token.as_deref() {
                 req = req.header("Authorization", format!("Bearer {}", token));
             }
-            let res = req.send().await.map_err(|e| error!("GitLab request error: {}", e))?;
+            let res = req
+                .send()
+                .await
+                .map_err(|e| error!("GitLab request error: {}", e))?;
 
             // link: <https://gitlab.com/api/v4/projects/...>; rel="next", <https://gitlab.com/api/v4/projects/...>; rel="first", <https://gitlab.com/api/v4/projects/...>; rel="last"
             let temp_url = if let Some(v) = res.headers().get("link") {
-                let header = v.to_str().map_err(|e| error!("GitLab Header decode error: {}", e))?;
+                let header = v
+                    .to_str()
+                    .map_err(|e| error!("GitLab Header decode error: {}", e))?;
                 if let Some(next) = header.split(", ").find(|s| s.ends_with(">; rel=\"next\"")) {
-                    Some(Url::parse(&next[1..(next.len() - 13)]).map_err(|e| error!("Invalid GitLab URL: {}", e))?)
+                    Some(
+                        Url::parse(&next[1..(next.len() - 13)])
+                            .map_err(|e| error!("Invalid GitLab URL: {}", e))?,
+                    )
                 } else {
                     None
                 }
@@ -69,7 +86,10 @@ impl Repo {
                 None
             };
 
-            let t: Vec<T> = res.json().await.map_err(|e| error!("GitLab response deserialize error: {}", e))?;
+            let t: Vec<T> = res
+                .json()
+                .await
+                .map_err(|e| error!("GitLab response deserialize error: {}", e))?;
 
             acc.extend(t);
 
@@ -97,7 +117,11 @@ pub struct TreeEntry {
 
 impl From<TreeEntry> for super::TreeEntry {
     fn from(te: TreeEntry) -> Self {
-        super::TreeEntry { is_dir: te._type == EntryType::Tree, path: te.path, sha: te.id }
+        super::TreeEntry {
+            is_dir: te._type == EntryType::Tree,
+            path: te.path,
+            sha: te.id,
+        }
     }
 }
 
