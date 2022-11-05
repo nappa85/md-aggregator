@@ -24,6 +24,7 @@ const CACHE_LIFETIME: u64 = 3600;
 
 pub static STYLE: &str = include_str!("../style.css");
 pub static MARKDOWN: &str = include_str!("../markdown.css");
+pub static SCRIPT: &str = include_str!("../script.js");
 
 // Cache of Tree data
 static TREE: Lazy<ArcSwap<Cache>> = Lazy::new(Default::default);

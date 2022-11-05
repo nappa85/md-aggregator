@@ -35,6 +35,7 @@ async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
                 match req.uri().path() {
                     "/style.css" => Ok(Response::new(Body::from(cache::STYLE))),
                     "/markdown.css" => Ok(Response::new(Body::from(cache::MARKDOWN))),
+                    "/script.js" => Ok(Response::new(Body::from(cache::SCRIPT))),
                     _ => {
                         // send entire template
                         let cache = cache::get();

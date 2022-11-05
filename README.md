@@ -45,3 +45,4 @@ For private repos, a token with `read_api` scope is necessary.
 ## Missing features
 
 * support github API pagination (?)
+* support page preview
