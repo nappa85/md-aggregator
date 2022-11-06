@@ -38,8 +38,14 @@ h1, h2, h3, h4, h5, h6, h7 {
 #menu li.active {
     background-color: #2b2a2f;
 }
+#menu li.dir::before {
+    content: "\2795\20";
+}
 #menu li.dir > ul {
     display: none;
+}
+#menu li.dir.open::before {
+    content: "\2796\20";
 }
 #menu li.dir.open > ul {
     display: inherit;
