@@ -37,8 +37,7 @@ window.addEventListener('load', function() {
         event.preventDefault();
         if(self.parentNode.classList.contains('dir')) {
             self.parentNode.classList.toggle('open');
-        }
-        else {
+        } else {
             document.querySelectorAll('li.active').forEach((self) => self.classList.toggle('active'));
             self.parentNode.classList.toggle('active');
             const url = self.href;
@@ -62,19 +61,21 @@ window.addEventListener('load', function() {
             if(newParent.querySelectorAll('a').length == 0) {
                 self.classList.add('hidden');
             }
-        }
-        else {
+        } else {
             self.classList.add('hidden');
         }
     });
     const opened = document.querySelectorAll('#menu li a[href=\'' + pathname + '\']');
-    if(opened.length > 0) {
+    if(opened.length > 1) {
+        let content = '<h1>Disambiguation</h1><ul>';
+        opened.forEach((el) => content += '<li>' + el.outerHTML + '</li>');
+        document.querySelector('#content').innerHTML = content + '</ul>';
+    } else if(opened.length > 0) {
         opened.forEach((self) => {
             self.parentNode.classList.toggle('active');
             open(pathname, self.parentNode.dataset.owner);
         });
-    }
-    else {
+    } else {
         document.querySelector('body').classList.toggle('collapsed');
     }
 });
