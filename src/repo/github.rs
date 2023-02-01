@@ -1,3 +1,5 @@
+use base64::prelude::{Engine, BASE64_STANDARD};
+
 use reqwest::IntoUrl;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -33,7 +35,8 @@ impl Repo {
             .ok()?;
         // we need to remove problematic chars
         let contents = res.content.split_whitespace().collect::<Vec<_>>().join("");
-        base64::decode(contents)
+        BASE64_STANDARD
+            .decode(contents)
             .map_err(|e| error!("GitHub base64 decode error: {e}\n{res:?}"))
             .ok()
     }

@@ -34,24 +34,15 @@ async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
                 }
             } else {
                 // serve static files
-                match req.uri().path() {
-                    "/style.css" => Ok(Response::builder()
-                        .header("Content-Type", "text/css")
-                        .body(Body::from(cache::STYLE))
-                        .unwrap()),
-                    "/markdown.css" => Ok(Response::builder()
-                        .header("Content-Type", "text/css")
-                        .body(Body::from(cache::MARKDOWN))
-                        .unwrap()),
-                    "/script.js" => Ok(Response::builder()
-                        .header("Content-Type", "text/javascript")
-                        .body(Body::from(cache::SCRIPT))
-                        .unwrap()),
-                    _ => {
-                        // send entire template
-                        let cache = cache::get();
-                        Ok(Response::new(Body::from(cache.to_string())))
-                    }
+                if let Some((content_type, body)) = cache::static_cache(req.uri().path()) {
+                    Ok(Response::builder()
+                        .header("Content-Type", content_type)
+                        .body(Body::from(body))
+                        .unwrap())
+                } else {
+                    // send entire template
+                    let cache = cache::get();
+                    Ok(Response::new(Body::from(cache.to_string())))
                 }
             }
         }

@@ -7,6 +7,8 @@ use std::{
 
 use arc_swap::{ArcSwap, Guard};
 
+use include_uri::include_str_from_url;
+
 use once_cell::sync::Lazy;
 
 use serde::Serialize;
@@ -21,10 +23,6 @@ type Cache = HashMap<String, Vec<CacheEntry>>;
 
 // Article cache in seconds
 const CACHE_LIFETIME: u64 = 3600;
-
-pub static STYLE: &str = include_str!("../style.css");
-pub static MARKDOWN: &str = include_str!("../markdown.css");
-pub static SCRIPT: &str = include_str!("../script.js");
 
 // Cache of Tree data
 static TREE: Lazy<ArcSwap<Cache>> = Lazy::new(Default::default);
@@ -208,4 +206,47 @@ pub async fn retrieve(path: &str, owner: &str) -> Option<Vec<u8>> {
         }
     }
     None
+}
+
+pub const fn static_cache(path: &str) -> Option<(&'static str, &'static str)> {
+    match path.as_bytes() {
+        b"/style.css" => Some(("text/css", include_str!("../style.css"))),
+        b"/markdown.css" => Some(("text/css", include_str!("../markdown.css"))),
+        b"/script.js" => Some(("text/javascript", include_str!("../script.js"))),
+        b"/showdown/showdown.min.js" => Some((
+            "text/javascript",
+            include_str_from_url!("https://unpkg.com/showdown@2.1.0/dist/showdown.min.js"),
+        )),
+        b"/highlightjs/styles/default.min.css" => Some((
+            "text/css",
+            include_str_from_url!(
+                "https://unpkg.com/@highlightjs/cdn-assets@11.7.0/styles/default.min.css"
+            ),
+        )),
+        b"/highlightjs/styles/github-dark.min.css" => Some((
+            "text/css",
+            include_str_from_url!(
+                "https://unpkg.com/@highlightjs/cdn-assets@11.7.0/styles/github-dark.min.css"
+            ),
+        )),
+        b"/highlightjs/highlight.min.js" => Some((
+            "text/javascript",
+            include_str_from_url!(
+                "https://unpkg.com/@highlightjs/cdn-assets@11.7.0/highlight.min.js"
+            ),
+        )),
+        b"/highlightjs/elixir.min.js" => Some((
+            "text/javascript",
+            include_str_from_url!("https://unpkg.com/@highlightjs/cdn-assets@11.7.0/elixir.min.js"),
+        )),
+        b"/highlightjs/go.min.js" => Some((
+            "text/javascript",
+            include_str_from_url!("https://unpkg.com/@highlightjs/cdn-assets@11.7.0/go.min.js"),
+        )),
+        b"/highlightjs/rust.min.js" => Some((
+            "text/javascript",
+            include_str_from_url!("https://unpkg.com/@highlightjs/cdn-assets@11.7.0/rust.min.js"),
+        )),
+        _ => None,
+    }
 }

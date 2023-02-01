@@ -1,3 +1,5 @@
+use base64::prelude::{Engine, BASE64_STANDARD};
+
 use reqwest::{IntoUrl, Url};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -17,7 +19,7 @@ impl Repo {
             .call_recursive(format!(
                 "https://gitlab.com/api/v4/projects/{}/repository/tree?recursive=1&per_page=100&pagination=keyset{}",
                 self.id,
-                self.branch.as_deref().map(|branch| format!("&ref={}", branch)).unwrap_or_default(),
+                self.branch.as_deref().map(|branch| format!("&ref={branch}")).unwrap_or_default(),
             ))
             .await?;
         Ok(tree.into_iter().map(Into::into).collect())
@@ -31,7 +33,8 @@ impl Repo {
             ))
             .await
             .ok()?;
-        base64::decode(res.content.trim())
+        BASE64_STANDARD
+            .decode(res.content.trim())
             .map_err(|e| error!("GitLab base64 decode error: {e}\n{res:?}"))
             .ok()
     }
@@ -39,7 +42,7 @@ impl Repo {
     async fn call<U: IntoUrl, T: DeserializeOwned>(&self, url: U) -> Result<T, ()> {
         let mut req = super::CLIENT.get(url).header("User-Agent", "md-aggregator");
         if let Some(token) = self.token.as_deref() {
-            req = req.header("Authorization", format!("Bearer {}", token));
+            req = req.header("Authorization", format!("Bearer {token}"));
         }
         req.send()
             .await
@@ -62,7 +65,7 @@ impl Repo {
         loop {
             let mut req = super::CLIENT.get(url).header("User-Agent", "md-aggregator");
             if let Some(token) = self.token.as_deref() {
-                req = req.header("Authorization", format!("Bearer {}", token));
+                req = req.header("Authorization", format!("Bearer {token}"));
             }
             let res = req
                 .send()
