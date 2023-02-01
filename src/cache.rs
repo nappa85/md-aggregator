@@ -217,6 +217,10 @@ pub const fn static_cache(path: &str) -> Option<(&'static str, &'static str)> {
             "text/javascript",
             include_str_from_url!("https://unpkg.com/showdown@2.1.0/dist/showdown.min.js"),
         )),
+        b"/showdown/showdown.min.js.map" => Some((
+            "application/json",
+            include_str_from_url!("https://unpkg.com/showdown@2.1.0/dist/showdown.min.js.map"),
+        )),
         b"/highlightjs/styles/default.min.css" => Some((
             "text/css",
             include_str_from_url!(
@@ -235,17 +239,23 @@ pub const fn static_cache(path: &str) -> Option<(&'static str, &'static str)> {
                 "https://unpkg.com/@highlightjs/cdn-assets@11.7.0/highlight.min.js"
             ),
         )),
-        b"/highlightjs/elixir.min.js" => Some((
+        b"/highlightjs/languages/elixir.min.js" => Some((
             "text/javascript",
-            include_str_from_url!("https://unpkg.com/@highlightjs/cdn-assets@11.7.0/elixir.min.js"),
+            include_str_from_url!(
+                "https://unpkg.com/@highlightjs/cdn-assets@11.7.0/languages/elixir.min.js"
+            ),
         )),
-        b"/highlightjs/go.min.js" => Some((
+        b"/highlightjs/languages/go.min.js" => Some((
             "text/javascript",
-            include_str_from_url!("https://unpkg.com/@highlightjs/cdn-assets@11.7.0/go.min.js"),
+            include_str_from_url!(
+                "https://unpkg.com/@highlightjs/cdn-assets@11.7.0/languages/go.min.js"
+            ),
         )),
-        b"/highlightjs/rust.min.js" => Some((
+        b"/highlightjs/languages/rust.min.js" => Some((
             "text/javascript",
-            include_str_from_url!("https://unpkg.com/@highlightjs/cdn-assets@11.7.0/rust.min.js"),
+            include_str_from_url!(
+                "https://unpkg.com/@highlightjs/cdn-assets@11.7.0/languages/rust.min.js"
+            ),
         )),
         _ => None,
     }
